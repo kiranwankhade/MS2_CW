@@ -1,5 +1,5 @@
-const multer =  require("multer");
-const express = require("express")
+const multer = require("multer");
+const express = require("express");
 
 const upload = require("../middleware/fileUpload");
 const { UNEXPECTED_FILE_TYPE } = require("../constants/file");
@@ -18,19 +18,18 @@ fileRouter.post(
   function (req, res, next) {
     upload(req, res, function (err) {
       if (err instanceof multer.MulterError) {
-        if (err.code == UNEXPECTED_FILE_TYPE.code) {
+        if (err.code === UNEXPECTED_FILE_TYPE.code) {
           return res.status(400).json({ error: { description: err.field } });
         }
-      } else {
+      } else if (err) {
         return res.status(500).json({ error: { description: err.message } });
       }
+      next(); //add next here
     });
-
-    next();
   },
-  fileController,
+  isFilePresent,
   imageResize,
-  isFilePresent
+  fileController
 );
 
-module.exports = {fileRouter}
+module.exports = { fileRouter };

@@ -1,4 +1,4 @@
-const { cloudinary } = require( "cloudinary");
+const cloudinary = require("cloudinary").v2;
 const crypto = require("crypto");
 
 const cloudinaryConfig = () => {
@@ -9,44 +9,36 @@ const cloudinaryConfig = () => {
   });
 };
 
-const generateSignature = () => {
+const generateSignature = (paramsToSign) => {
   const { api_secret } = cloudinary.config();
-
   const sortedParams = Object.keys(paramsToSign)
     .sort()
-    .map((key) => `${key} = ${paramsToSign}`)
+    .map((key) => `${key}=${paramsToSign[key]}`)
     .join("&");
-
   const signature = crypto
     .createHash("sha1")
     .update(sortedParams + api_secret)
     .digest("hex");
-
-    return signature;
+  return signature;
 };
 
 const uploadToCloudinary = async (filePath) => {
   try {
     cloudinaryConfig();
     const timestamp = Math.round(new Date().getTime() / 1000);
-
-    const paramsToSign = {
-        timestamp,
-    }
-
+    const paramsToSign = { timestamp };
     const signature = generateSignature(paramsToSign);
-
     const result = await cloudinary.uploader.upload(filePath, {
-        ...paramsToSign,
-        signature,
-        api_key: process.env.CLOUDINARY_API_KEY,
-    })
-
+      ...paramsToSign,
+      signature,
+      api_key: process.env.CLOUDINARY_API_KEY,
+    });
     return result;
   } catch (error) {
     console.error(error);
   }
 };
 
-module.exports = uploadToCloudinary;
-
+module.exports = {
+  uploadToCloudinary,
+};

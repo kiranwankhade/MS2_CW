@@ -1,25 +1,32 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+function generateToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET);
+}
+
+const payload = { lesson: "cloudinaryUpload" };
+const token = generateToken(payload);
+console.log("Generated Token:", token);
+
 
 const authenticateJWT = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1];
-  console.log('req.header("Authorization"):', req.header("Authorization"))
-  console.log('token:', token)
+  const token = req.header("Authorization").split(" ")[1];
 
   if (!token) {
-    return res.status(403).json({
-      message: "No token provides, authorization denied",
-    });
+    return res
+      .status(403)
+      .json({ message: "No token provided, authorization denied." });
   }
-  
-  try{
 
+  try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('decoded:', decoded)
     req.user = decoded;
-    next();
-
-  }catch(error){
-    res.status(401).json({message:"Invalid token."})
+    next(); //need next method
+  } catch (error) {
+    return res
+      .status(401)
+      .json({ message: "Invalid token, authorization denied." });
   }
 };
 
